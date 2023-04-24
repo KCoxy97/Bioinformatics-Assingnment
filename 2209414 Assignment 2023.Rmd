@@ -1,0 +1,251 @@
+---
+title: "Advanced bioinformatics assignment 2023"
+author: "m2209414"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(roots.dir = "C:/Users/Katie/OneDrive/Documents/PgCert/Advanced bioinformatics/LMS_RNAseq_short-master-2023-final/LMS_RNAseq_short-master-2023-final/course")
+```
+
+### Task 3.1
+
+The sum function is used to add values, using the : operator this gives the instruction to produce a sum of all integers between 5 and 55.
+
+```{r}
+sum (5:55)
+```
+
+### Task 3.2
+
+The function was named sumfun, the (n) indicates what is going to be inputted into the function. Inside the curly brackets is what will run, so the function will calculate the sum of all integers between 5 and n.
+
+```{r}
+sumfun <- function(n) {
+  sum <- (sum(5:n))
+  return(sum)
+}
+sumfun(10)
+sumfun(20)
+sumfun(100)
+```
+
+### Task 3.3
+
+A loop using **For** was made to generate the Fibonacci sequence by using **n** as the desired length of the output sequence.
+
+```{r}
+
+n <- 12
+fib <- numeric(n)
+fib[1] <- 1
+fib[2] <- 1
+for (i in 3:n)
+{
+  fib[i] <- fib[i-1]+fib[i-2] 
+}
+print(fib)
+
+```
+
+### Task 3.4
+
+I assigned the mtcars data to a variable, I then plotted the data using ggplot with aesthetic data and assigned the x axis as a factor which is the gear and the y-axis to mpg. I then filled the boxes by gear and plotted the boxplot layer.
+
+```{r}
+library(ggplot2)
+df <-mtcars
+ggplot(data=df, aes(x=factor(gear), y=mpg , fill=gear)) + geom_boxplot()
+
+```
+
+### Task 3.5
+
+The *cars* dataset and the function *lm*, were used to display the itercept of the line as 8.2839, 0.1656 (standard error of 0.87438 and 0.01749), which can be applied show a linear linear relationship between speed (mph) and breaking distance (feet).
+
+```{r}
+model <- lm(speed ~ dist, data=cars)
+summary (model)
+```
+
+### Task 3.6
+
+ggplot was used to create a scatter plot for speed and distance, the geom smooth filter was used to apply linear regression.
+
+```{r}
+
+p <- ggplot(cars, aes(x=speed, y=dist)) + geom_point(size=2) + geom_smooth(method = lm)
+p + ggtitle("Speed vs distance") +
+  xlab("speed (mph)") + ylab("distance (feet)")
+```
+
+### Task 3.7
+
+First distance is converted to miles by division of 5280, then calculate breaking distance by squaring the speed and using linear regression (lm) to estimate the average reaction time.
+
+```{r}
+data=cars
+#convert distance from feet to miles 
+dist_m <- cars$dist/5280 
+break_dis <-cars$speed^2
+SD <- lm(dist_m ~ break_dis, data=cars)
+summary (SD)
+p <- ggplot(SD, aes(x=dist_m, y=break_dis)) + geom_point(size=2) + geom_smooth(method = lm)
+p + ggtitle("distance vs breaking speed") +
+  xlab("distance (miles)") + ylab("breaking speed (mph)")
+```
+
+### Task 3.8
+
+The csv file (all_counts) was read using read.csv command, row.names = 1 indicates that the data file has row names, and which column number they are stored in, "dim" was used to determine the dimensions. The sample description (sam_des) was read using the read.table command, the header = TRUE argument tells R that the first row of your. file contains the variable names and sep="\\t" tells R that the file is tab-delimited. The command "dim" was used to determine the dimensions.
+
+```{r}
+#read count data
+all_counts <- read.csv("exercises/data/exercise1_counts.csv", row.names = 1)
+# Explore data
+head(all_counts)
+dim(all_counts)
+class(all_counts)
+
+#Read sample description
+#Load data 
+sam_des <- read.table("exercises/data/exercise1_sample_description.info", sep = "\t", header = TRUE)
+#Explore data
+head(sam_des)
+dim(sam_des)
+class(sam_des)
+```
+
+### Task 3.9
+
+The data was assessed in order to apply DEseq command, this is because the data in the sample description needs to correspond correctly to the data in the csv reads file. This was checked using the head(col_data) command.
+
+```{r}
+#Prepare data for DESeq
+col_data <- data.frame(sample = sam_des$sample,
+                       condition = sam_des$condition,
+                       batch = sam_des$batch)
+
+#Store data as factors
+col_data$sample <- as.factor(col_data$sample)
+col_data$condition <- as.factor(col_data$condition)
+col_data$batch <- as.factor(col_data$batch)
+
+#Check dimensions are the columns the same? 
+all(colnames(all_counts)== sam_des$sample)
+head(col_data)
+```
+
+### Task 3.10 
+
+Construct DESeqDataSet object using count data and sample description
+
+```{r}
+# Load DESeq2 library
+library(DESeq2)
+# Build DESeq dataset
+dds <- DESeqDataSetFromMatrix(countData = all_counts , colData = col_data , design = ~condition)
+# Apply DESeq normalization
+dds <- DESeq(dds)
+# Ask for information about DESeq
+?DESeq
+```
+
+### Task 3.11
+
+Regularized logarithm (rlog) and variance stabilizing transformation (vst) both transform the original count data to the log2 scale normalized to library size, transformed versions of count data are useful for downstream analyses like visualization or clustering.
+
+```{r}
+# Regularized log transformation
+rld <- rlog(dds)
+class(rld)
+# Get rld in count format
+rld_counts <- assay(rld)
+class(rld_counts)
+# Regularized log transformation
+vsd <- varianceStabilizingTransformation(dds)
+class(vsd)
+# Get rld in count format
+vsd_counts <- assay(vsd)
+class(vsd_counts)
+```
+
+```{r}
+# Regularized log transformation
+rld <- rlog(dds)
+class(rld)
+# Get rld in count format
+rld_counts <- assay(rld)
+class(rld_counts)
+# Regularized log transformation
+vsd <- varianceStabilizingTransformation(dds)
+class(vsd)
+# Get rld in count format
+vsd_counts <- assay(vsd)
+class(vsd_counts)
+```
+
+### Task 3.12
+
+A heatmap of count matrix based on the top 40 highly expressed genes using rlog and VST data was produced by normalizing dds and applying to dds_counts, then collecting the mean value from the rows in dds_counts a
+
+
+```{r}
+# Load pheatmap library
+library("pheatmap")
+# Get dds normalized counts
+dds_counts <- counts(dds, normalized = TRUE)
+head(dds_counts)
+# Get normalized counts - 20 higher values
+select <- order(rowMeans(dds_counts), decreasing = TRUE)[1:40]
+head(select)
+# Heatmap of the rlog transformed data
+pheatmap(assay(rld)[select, ])
+# Heatmap of the vst transformed data
+pheatmap(assay(vsd)[select, ])
+```
+
+## Task 3.13 
+
+The Sample Distance Matrix (SDM) is used to explore clustering behavior, by computing the "similarity" across the different samples.
+
+```{r}
+# Compute SDM from rlog transformed data
+sample_dist <- dist(t(assay(rld)))
+class(sample_dist)
+# Get SDM in matrix form
+sdm <- as.matrix(sample_dist)
+class(sdm)
+# Load library
+library("RColorBrewer")
+# Add row names for clear plot
+rownames(sdm) <- rld$Group
+colnames(sdm) <- NULL
+# Add colors
+colors <- colorRampPalette(rev(brewer.pal(9, "PuRd")))(255)
+# Plot heatmap
+pheatmap(sdm,
+         clustering_distance_rows = sample_dist,
+         clustering_distance_cols = sample_dist,
+         col = colors)
+```
+
+## Task 3.14 
+
+Principal Component Analysis using rlog method and find out the % significance values of first two principal components was carried out using the plotPCA command.
+
+```{r}
+# PCA plot on rld transformed data
+plotPCA(rld, intgroup = "condition")
+```
+
+### Task 3.15 
+
+Principal Component Analysis using rlog method and find out the % significance values of first two principal components was carried out using the plotPCA command.
+
+```{r}
+# PCA plot on vsd transformed data
+plotPCA(vsd, intgroup = "condition")
+```
